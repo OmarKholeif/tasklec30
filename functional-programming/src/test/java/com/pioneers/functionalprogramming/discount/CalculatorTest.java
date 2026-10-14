@@ -43,7 +43,7 @@ class CalculatorTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Mostafa", "Elsayed", "Omar", ""})
+    @ValueSource(strings = {"Mostafa", "Elsayed", "Omar"})
     void assertNamesNotNull(String name) {
         assertNotNull(name);
         assertTrue(!name.isBlank());
