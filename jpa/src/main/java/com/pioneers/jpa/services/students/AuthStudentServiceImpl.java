@@ -31,6 +31,8 @@ public class AuthStudentServiceImpl implements AuthStudentService {
 
     private final StudentRepository studentRepository;
 
+    // TODO: Fix the found bug in the following service.
+    //  The bug occurs when we signup a student who already deleted his account.
     @Override
     public void signup(final StudentRegister studentRegisterRequest) throws RegisterException {
         final String methodName = "signup";

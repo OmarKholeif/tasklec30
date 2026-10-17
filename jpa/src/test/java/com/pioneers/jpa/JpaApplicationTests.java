@@ -5,6 +5,7 @@ import com.pioneers.jpa.models.entities.Student;
 import com.pioneers.jpa.repositories.StudentRepository;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Persistence;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static com.pioneers.jpa.utils.CredentialsHelper.hashPassword;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,6 +103,46 @@ class JpaApplicationTests {
         assertThat(registeredAddress.getApartmentNumber()).isEqualTo(1);
     }
 
+    @Test
+    @Sql(statements = {
+            "DELETE FROM students WHERE email IN ('older-address@example.com', 'younger-address@example.com', 'no-address@example.com', 'archived-address@example.com')",
+            "DELETE FROM addresses WHERE street = 'Repository test street'"
+    }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    void findAllSortedByAgeFetchesAddressesForDetachedStudents() {
+        Student olderStudent = student("Older Student", 24, "older-address@example.com");
+        olderStudent.setAddress(address());
+        Student youngerStudent = student("Younger Student", 19, "younger-address@example.com");
+        youngerStudent.setAddress(address());
+        Student studentWithoutAddress = student("No Address Student", 21, "no-address@example.com");
+        Student archivedStudent = student("Archived Student", 18, "archived-address@example.com");
+        archivedStudent.setIsArchived(true);
+
+        studentRepository.save(olderStudent);
+        studentRepository.save(youngerStudent);
+        studentRepository.save(studentWithoutAddress);
+        studentRepository.save(archivedStudent);
+
+        // No test transaction: the returned entities must already contain their addresses.
+        List<Student> students = List.copyOf(studentRepository.findAllSortedByAge());
+
+        assertThat(students).extracting(Student::getEmail).containsExactly(
+                "younger-address@example.com", "no-address@example.com", "older-address@example.com");
+        assertThat(students.get(1).getAddress()).isNull();
+
+        for (Student student : List.of(students.get(0), students.get(2))) {
+            assertThat(Persistence.getPersistenceUtil().isLoaded(student, "address")).isTrue();
+            Address address = student.getAddress();
+            assertThat(address.getId()).isNotNull();
+            assertThat(address.getCountry()).isEqualTo("Egypt");
+            assertThat(address.getGovernance()).isEqualTo("Cairo");
+            assertThat(address.getCity()).isEqualTo("New Cairo");
+            assertThat(address.getStreet()).isEqualTo("Repository test street");
+            assertThat(address.getBuildingNumber()).isEqualTo(100);
+            assertThat(address.getFloorNumber()).isEqualTo(2);
+            assertThat(address.getApartmentNumber()).isEqualTo(3);
+        }
+    }
+
     /*@Test
     @Transactional
     void findAllStudentsReturnsStudentsSortedByAge() throws Exception {
@@ -137,6 +180,19 @@ class JpaApplicationTests {
                 .age(age)
                 .email(email)
                 .password("test-password")
+                .isArchived(false)
+                .build();
+    }
+
+    private static Address address() {
+        return Address.builder()
+                .country("Egypt")
+                .governance("Cairo")
+                .city("New Cairo")
+                .street("Repository test street")
+                .buildingNumber(100)
+                .floorNumber(2)
+                .apartmentNumber(3)
                 .build();
     }
 

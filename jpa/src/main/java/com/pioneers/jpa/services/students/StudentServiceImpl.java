@@ -91,8 +91,8 @@ public class StudentServiceImpl implements StudentService {
                 .email(foundStudent.getEmail())
                 .password(updatedHashedPassword)
                 .isLoggedIn(foundStudent.isLoggedIn())
-                .score(foundStudent.getScore())
-                .finalScore(foundStudent.getFinalScore())
+                .score(studentUpdateRequest.score())
+                .finalScore(studentUpdateRequest.finalScore())
                 .createdAt(foundStudent.getCreatedAt())
                 .isArchived(foundStudent.getIsArchived())
                 .build();

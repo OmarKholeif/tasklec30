@@ -2,14 +2,18 @@ package com.pioneers.jpa.utils.mappers;
 
 import com.pioneers.jpa.errors.exceptions.CredentialsException;
 import com.pioneers.jpa.models.dtos.requests.StudentRegister;
+import com.pioneers.jpa.models.dtos.responses.AddressResponse;
 import com.pioneers.jpa.models.dtos.responses.StudentResponse;
 import com.pioneers.jpa.models.entities.Address;
 import com.pioneers.jpa.models.entities.Student;
 import com.pioneers.jpa.utils.times.TimeHelper;
 
+import java.util.Optional;
+
 import static com.pioneers.jpa.utils.CredentialsHelper.hashPassword;
 import static com.pioneers.jpa.utils.NameBuilder.buildFullName;
 import static com.pioneers.jpa.utils.mappers.AddressMapper.toAddress;
+import static com.pioneers.jpa.utils.mappers.AddressMapper.toAddressResponse;
 
 public final class StudentMapper {
     private StudentMapper() {
@@ -17,7 +21,10 @@ public final class StudentMapper {
     }
 
     public static StudentResponse toStudentResponse(final Student student) {
-        return new StudentResponse(student.getFullName(), student.getAge(), student.getEmail(), student.getScore());
+        final Optional<AddressResponse> optionalAddressResponse = toAddressResponse(student.getAddress());
+
+        return new StudentResponse(student.getFullName(), student.getAge(), student.getEmail(), student.getScore(),
+                optionalAddressResponse);
     }
 
     public static Student toStudent(final StudentRegister studentRegister) throws CredentialsException {

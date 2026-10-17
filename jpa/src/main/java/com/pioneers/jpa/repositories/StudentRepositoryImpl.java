@@ -143,7 +143,7 @@ public class StudentRepositoryImpl implements StudentRepository {
     @Override
     public Collection<Student> findAllSortedByAge() {
         return entityManager
-                .createQuery("SELECT s FROM Student s WHERE s.isArchived = FALSE ORDER BY s.age ASC", Student.class)
+                .createQuery("SELECT s FROM Student s LEFT JOIN FETCH s.address WHERE s.isArchived = FALSE ORDER BY s.age ASC", Student.class)
                 .getResultList();
     }
 
