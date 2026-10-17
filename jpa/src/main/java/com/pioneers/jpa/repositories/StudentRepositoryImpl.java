@@ -27,10 +27,10 @@ public class StudentRepositoryImpl implements StudentRepository {
 
         /*final String nativeSql = "INSERT INTO students (id, fullName, age, email, password, isLoggedIn, score, finalScore, createdAt) VALUES ('"
                 +  student.getId() + "', '" + student.getFullName() +  "', '" + student.getAge() + "', '" + student.getEmail() + "', '";*/
-        final String hql = """
+        /*final String hql = """
                 INSERT INTO Student (id, fullName, age, email, password, isLoggedIn, score, finalScore, createdAt)
                 VALUES (:id, :fullName, :age, :email, :password, :isLoggedIn, :score, :finalScore, :createdAt)
-                """;
+                """;*/
 //        final String sql = "INSERT INTO Student s (id, fullName, age, email, password, isLoggedIn, score, finalScore, createdAt) VALUES (:id, :fullName, :age, :email, :password, :isLoggedIn, :score, :finalScore, :createdAt)";
 
         entityManager.persist(student);

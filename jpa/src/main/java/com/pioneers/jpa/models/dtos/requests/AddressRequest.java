@@ -5,8 +5,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.UUID;
-
 public record AddressRequest(
         @NotBlank(message = "Country must not be blank")
         @Size(min = 2, max = 30, message = "Country length between 2 and 30")

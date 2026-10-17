@@ -1,6 +1,9 @@
 package com.pioneers.jpa;
 
+import com.pioneers.jpa.models.entities.Address;
 import com.pioneers.jpa.models.entities.Student;
+import com.pioneers.jpa.repositories.StudentRepository;
+
 import jakarta.persistence.EntityManager;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotBlank;
@@ -11,16 +14,11 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 import static com.pioneers.jpa.utils.CredentialsHelper.hashPassword;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -40,12 +38,15 @@ class JpaApplicationTests {
     private EntityManager entityManager;
 
     @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
     private Validator validator;
 
     @Test
     @Sql(statements = "DELETE FROM students WHERE email = 'abdelaziz.said@techpionershub.com'",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    void registerStudentPersistsStudentWithoutAnExistingTransaction() throws Exception {
+    void registerStudentPersistsStudentAndAddressWithoutAnExistingTransaction() throws Exception {
         mockMvc.perform(post("/jpa/auth/signup").contextPath("/jpa")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -54,7 +55,16 @@ class JpaApplicationTests {
                                     "secondName": "Said",
                                     "age": 23,
                                     "email": "abdelaziz.said@techpionershub.com",
-                                    "password": "P@ssw0rd123"
+                                    "password": "P@ssw0rd123",
+                                    "addressRequest": {
+                                        "country": "Arab Republic of Egypt",
+                                        "governance": "Cairo",
+                                        "city": "Fifth Setllement",
+                                        "street": "Mohamed Nagib",
+                                        "buildingNumber": 100,
+                                        "floor": 1,
+                                        "apartmentNumber": 1
+                                    }
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -71,6 +81,23 @@ class JpaApplicationTests {
         assertThat(registeredStudent.getAge()).isEqualTo(23);
         assertThat(registeredStudent.getPassword()).isEqualTo(hashPassword("P@ssw0rd123"));
         assertThat(registeredStudent.isLoggedIn()).isFalse();
+        assertThat(registeredStudent.getIsArchived()).isFalse();
+        assertThat(studentRepository.findByEmail(registeredStudent.getEmail())).isPresent();
+        assertThat(studentRepository.findById(registeredStudent.getId())).isPresent();
+
+        Address registeredAddress = entityManager.createQuery(
+                        "SELECT a FROM Student s JOIN s.address a WHERE s.id = :id", Address.class)
+                .setParameter("id", registeredStudent.getId())
+                .getSingleResult();
+
+        assertThat(registeredAddress.getId()).isNotNull();
+        assertThat(registeredAddress.getCountry()).isEqualTo("Arab Republic of Egypt");
+        assertThat(registeredAddress.getGovernance()).isEqualTo("Cairo");
+        assertThat(registeredAddress.getCity()).isEqualTo("Fifth Setllement");
+        assertThat(registeredAddress.getStreet()).isEqualTo("Mohamed Nagib");
+        assertThat(registeredAddress.getBuildingNumber()).isEqualTo(100);
+        assertThat(registeredAddress.getFloorNumber()).isEqualTo(1);
+        assertThat(registeredAddress.getApartmentNumber()).isEqualTo(1);
     }
 
     /*@Test

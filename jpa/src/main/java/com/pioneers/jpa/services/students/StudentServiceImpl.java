@@ -84,14 +84,20 @@ public class StudentServiceImpl implements StudentService {
         final String updatedHashedPassword = hashPassword(studentUpdateRequest.password());
 
         final Student foundStudent = optionalFoundStudent.get();
-        foundStudent.setFullName(updatedFullName);
-        foundStudent.setEmail(studentUpdateRequest.email());
-        foundStudent.setAge(studentUpdateRequest.age());
-        foundStudent.setPassword(updatedHashedPassword);
-        foundStudent.setScore(studentUpdateRequest.score());
-        foundStudent.setFinalScore(studentUpdateRequest.finalScore());
+        final Student updatedStudent = Student.builder()
+                .id(foundStudent.getId())
+                .fullName(updatedFullName)
+                .age(foundStudent.getAge())
+                .email(foundStudent.getEmail())
+                .password(updatedHashedPassword)
+                .isLoggedIn(foundStudent.isLoggedIn())
+                .score(foundStudent.getScore())
+                .finalScore(foundStudent.getFinalScore())
+                .createdAt(foundStudent.getCreatedAt())
+                .isArchived(foundStudent.getIsArchived())
+                .build();
 
-        studentRepository.update(foundStudent);
+        studentRepository.update(updatedStudent);
     }
 
     @Override

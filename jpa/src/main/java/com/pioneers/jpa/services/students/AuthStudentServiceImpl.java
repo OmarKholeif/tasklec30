@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.pioneers.jpa.utils.CredentialsHelper.hashPassword;
-import static com.pioneers.jpa.utils.NameBuilder.buildFullName;
-import static com.pioneers.jpa.utils.builders.StudentBuilder.buildRegisteredStudent;
+import static com.pioneers.jpa.utils.mappers.StudentMapper.toStudent;
 
 @Slf4j
 @Service
@@ -47,25 +46,15 @@ public class AuthStudentServiceImpl implements AuthStudentService {
                     String.format("Cannot find email [%s]", studentRegisterRequest.email()), logMessage);
         }
 
-        final String fullName =
-                buildFullName(studentRegisterRequest.firstName(), studentRegisterRequest.secondName());
-
-        final String hashedPassword;
+        final Student student;
         try {
-            hashedPassword = hashPassword(studentRegisterRequest.password());
+            student = toStudent(studentRegisterRequest);
         } catch (final CredentialsException e) {
             final String logMessage = String.format("%s, Cannot hash the [%s] user password due to: [%s]",
                     methodName, studentRegisterRequest.email(), e.getMessage());
 
             throw new RegisterException(e.getMessage(), logMessage);
         }
-
-        final Student student = buildRegisteredStudent(
-                studentRegisterRequest.age(),
-                studentRegisterRequest.email(),
-                fullName,
-                hashedPassword
-        );
 
         studentRepository.save(student);
 
