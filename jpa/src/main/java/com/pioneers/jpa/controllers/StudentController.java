@@ -27,9 +27,19 @@ public class StudentController {
         return studentService.findById(id);
     }
 
+    @GetMapping("findFirstRegistered")
+    public StudentResponse findFirstRegisteredApi() {
+        return studentService.findFirstRegisteredStudent();
+    }
+
     @GetMapping("findAllSucceededStudents")
     public Collection<StudentResponse> findAllSucceededStudentsApi() {
         return studentService.findAllSucceeded();
+    }
+
+    @GetMapping("findAllByFullName")
+    public Collection<StudentResponse> findAllSucceededStudentsApi(@RequestParam String fullName) {
+        return studentService.findAllByFullName(fullName);
     }
 
     @PutMapping("update/{id}")

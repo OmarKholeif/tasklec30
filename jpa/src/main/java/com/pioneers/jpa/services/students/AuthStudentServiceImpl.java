@@ -37,7 +37,7 @@ public class AuthStudentServiceImpl implements AuthStudentService {
     public void signup(final StudentRegister studentRegisterRequest) throws RegisterException {
         final String methodName = "signup";
 
-        final Optional<Student> optionalStudent = studentRepository.findByEmail(studentRegisterRequest.email());
+        final Optional<Student> optionalStudent = studentRepository.findByEmailAndIsArchivedIsFalse(studentRegisterRequest.email());
 
         if (optionalStudent.isPresent()) {
             final String logMessage =
@@ -66,7 +66,7 @@ public class AuthStudentServiceImpl implements AuthStudentService {
     @Override
     public void login(final StudentLogin studentLoginRequest) throws LoginException, CredentialsException {
 
-        final Student foundStudent = studentRepository.findByEmail(studentLoginRequest.email())
+        final Student foundStudent = studentRepository.findByEmailAndIsArchivedIsFalse(studentLoginRequest.email())
                 .orElseThrow(() ->
                         new LoginException("Student with email: " + studentLoginRequest.email() + " not registered"));
 
@@ -87,7 +87,7 @@ public class AuthStudentServiceImpl implements AuthStudentService {
 
     @Override
     public void logout(final String email) throws LogoutException {
-        final Student foundStudent = studentRepository.findByEmail(email)
+        final Student foundStudent = studentRepository.findByEmailAndIsArchivedIsFalse(email)
                 .orElseThrow(() -> new LogoutException("Student with email: " + email + " not registered"));
 
         foundStudent.logout();
@@ -101,7 +101,7 @@ public class AuthStudentServiceImpl implements AuthStudentService {
         final List<Student> registeredStudents = new ArrayList<>();
 
         studentRegisterRequests.forEach(request -> {
-            Optional<Student> optionalStudent = studentRepository.findByEmail(request.email());
+            Optional<Student> optionalStudent = studentRepository.findByEmailAndIsArchivedIsFalse(request.email());
 
             if (optionalStudent.isPresent()) {
                 registeredStudents.add(optionalStudent.get());

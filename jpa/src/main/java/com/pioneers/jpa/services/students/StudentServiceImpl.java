@@ -28,7 +28,7 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public List<StudentResponse> findAllSortedByAge() throws StudentException {
         final String methodName = "findAllSortedByAge";
-        final Collection<Student> sortedStudentsByAge = studentRepository.findAllSortedByAge();
+        final Collection<Student> sortedStudentsByAge = studentRepository.findAllByIsArchivedIsFalseOrderByAgeAsc();
 
         log.debug("{}, Successfully fetched all students sorted by age", methodName);
 
@@ -59,8 +59,32 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public StudentResponse findFirstRegisteredStudent() throws StudentException {
+        final Optional<Student> optionalFoundStudent = studentRepository.findFirstByOrderByCreatedAtAsc();
+
+        if (optionalFoundStudent.isEmpty()) {
+            throw new StudentException("Student doesn't exist in the DB");
+        }
+
+        return StudentMapper.toStudentResponse(optionalFoundStudent.get());
+    }
+
+    @Override
     public Collection<StudentResponse> findAllSucceeded() throws StudentException {
         final Collection<Student> succeededStudents = studentRepository.findAllSucceeded();
+
+        if (succeededStudents.isEmpty()) {
+            throw new StudentException("No success students found in the DB");
+        }
+
+        return succeededStudents.stream()
+                .map(StudentMapper::toStudentResponse)
+                .toList();
+    }
+
+    @Override
+    public List<StudentResponse> findAllByFullName(final String fullName) throws StudentException {
+        final List<Student> succeededStudents = studentRepository.findAllByFullNameAndAgeGreaterThan(fullName, 23);
 
         if (succeededStudents.isEmpty()) {
             throw new StudentException("No success students found in the DB");
@@ -108,20 +132,22 @@ public class StudentServiceImpl implements StudentService {
             throw new StudentException("No success students found in the DB");
         }
 
-        final Student foundStudent = optionalFoundStudent.get();
+        /*final Student foundStudent = optionalFoundStudent.get();
         foundStudent.setLoggedIn(false);
         foundStudent.setIsArchived(true);
 
-        studentRepository.update(foundStudent);
+        studentRepository.update(foundStudent);*/
+        studentRepository.deleteById(id);
     }
 
     @Override
     public void deleteAll() {
-        final List<Student> deletedStudents = studentRepository.findAllSortedByAge()
+        /*final List<Student> deletedStudents = studentRepository.findAllSortedByAge()
                 .stream()
                 .peek(student -> student.setIsArchived(true))
                 .toList();
 
-        studentRepository.updateAll(deletedStudents);
+        studentRepository.updateAll(deletedStudents);*/
+        studentRepository.deleteAll();
     }
 }

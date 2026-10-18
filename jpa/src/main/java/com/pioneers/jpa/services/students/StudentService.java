@@ -14,7 +14,11 @@ public interface StudentService {
 
     StudentResponse findById(UUID id) throws StudentException;
 
+    StudentResponse findFirstRegisteredStudent() throws StudentException;
+
     Collection<StudentResponse> findAllSucceeded() throws StudentException;
+
+    List<StudentResponse> findAllByFullName(String fullName) throws StudentException;
 
     void update(UUID id, StudentUpdate studentUpdateRequest) throws StudentException;
 

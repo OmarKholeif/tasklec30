@@ -85,7 +85,7 @@ class JpaApplicationTests {
         assertThat(registeredStudent.getPassword()).isEqualTo(hashPassword("P@ssw0rd123"));
         assertThat(registeredStudent.isLoggedIn()).isFalse();
         assertThat(registeredStudent.getIsArchived()).isFalse();
-        assertThat(studentRepository.findByEmail(registeredStudent.getEmail())).isPresent();
+        assertThat(studentRepository.findByEmailAndIsArchivedIsFalse(registeredStudent.getEmail())).isPresent();
         assertThat(studentRepository.findById(registeredStudent.getId())).isPresent();
 
         Address registeredAddress = entityManager.createQuery(
@@ -123,7 +123,7 @@ class JpaApplicationTests {
         studentRepository.save(archivedStudent);
 
         // No test transaction: the returned entities must already contain their addresses.
-        List<Student> students = List.copyOf(studentRepository.findAllSortedByAge());
+        List<Student> students = List.copyOf(studentRepository.findAllByIsArchivedIsFalseOrderByAgeAsc());
 
         assertThat(students).extracting(Student::getEmail).containsExactly(
                 "younger-address@example.com", "no-address@example.com", "older-address@example.com");
