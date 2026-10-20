@@ -26,7 +26,9 @@ public record StudentUpdate(
         @Max(value = 100, message = "Max Score is 100")
         float score,
 
-        float finalScore
+        float finalScore,
+
+        AddressRequest addressRequest
 ) {
     @Override
     public String toString() {

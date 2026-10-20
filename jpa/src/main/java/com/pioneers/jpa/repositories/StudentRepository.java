@@ -28,7 +28,6 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
     @Query(value = "UPDATE Student s SET s.isArchived = TRUE, s.isLoggedIn = FALSE")
     void deleteAll();
 
-    // TODO Fix the issue where the age is not updated!
     @Transactional
     @Modifying
     @Query("""
@@ -40,12 +39,14 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
                 s.isLoggedIn = :#{#student.isLoggedIn()},
                 s.score = :#{#student.score},
                 s.finalScore = :#{#student.finalScore},
-                s.createdAt = :#{#student.createdAt}
+                s.createdAt = :#{#student.createdAt},
+                s.isArchived = :#{#student.isArchived},
+                s.address = :#{#student.address}
             WHERE s.id = :#{#student.id}
             """)
     void update(@Param("student") Student student);
 
-//    Optional<Student> findByEmail(String email);
+    Optional<Student> findByEmail(String email);
 
     List<Student> findAllByFullNameAndAgeGreaterThan(String fullName, int ageIsGreaterThan);
 
@@ -56,10 +57,10 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
     Optional<Student> findFirstByOrderByCreatedAtAsc();
 
     @Query("""
-        SELECT s
-        FROM Student s
-        WHERE s.score > s.finalScore * 0.5
-          AND s.isArchived = FALSE
-        """)
+            SELECT s
+            FROM Student s
+            WHERE s.score > s.finalScore * 0.5
+              AND s.isArchived = FALSE
+            """)
     Collection<Student> findAllSucceeded();
 }

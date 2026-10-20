@@ -10,6 +10,7 @@ import com.pioneers.jpa.models.dtos.responses.GenericResponse;
 import com.pioneers.jpa.models.dtos.responses.StudentResponse;
 import com.pioneers.jpa.models.entities.Student;
 import com.pioneers.jpa.repositories.StudentRepository;
+import com.pioneers.jpa.services.address.AddressService;
 import com.pioneers.jpa.utils.mappers.StudentMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.pioneers.jpa.utils.CredentialsHelper.hashPassword;
 import static com.pioneers.jpa.utils.mappers.StudentMapper.toStudent;
@@ -30,6 +32,7 @@ import static com.pioneers.jpa.utils.mappers.StudentMapper.toStudent;
 public class AuthStudentServiceImpl implements AuthStudentService {
 
     private final StudentRepository studentRepository;
+    private final AddressService addressService;
 
     // TODO: Fix the found bug in the following service.
     //  The bug occurs when we signup a student who already deleted his account.
@@ -37,15 +40,15 @@ public class AuthStudentServiceImpl implements AuthStudentService {
     public void signup(final StudentRegister studentRegisterRequest) throws RegisterException {
         final String methodName = "signup";
 
-        final Optional<Student> optionalStudent = studentRepository.findByEmailAndIsArchivedIsFalse(studentRegisterRequest.email());
+        final Optional<Student> optionalStudent = studentRepository.findByEmail(studentRegisterRequest.email());
 
-        if (optionalStudent.isPresent()) {
+        if (optionalStudent.isPresent() && !optionalStudent.get().getIsArchived()) {
             final String logMessage =
                     String.format("%s, Errors in registration for email [%s], due to account is already registered",
                             methodName, studentRegisterRequest.email());
 
             throw new RegisterException(
-                    String.format("Cannot find email [%s]", studentRegisterRequest.email()), logMessage);
+                    String.format("account is already registered with email [%s]", studentRegisterRequest.email()), logMessage);
         }
 
         final Student student;
@@ -58,9 +61,22 @@ public class AuthStudentServiceImpl implements AuthStudentService {
             throw new RegisterException(e.getMessage(), logMessage);
         }
 
+        student.setAddress(addressService.findOrCreateAddress(student.getAddress()));
+
+        if (optionalStudent.isPresent() && optionalStudent.get().getIsArchived()) {
+            reRegister(optionalStudent.get().getId(), student);
+            return;
+        }
+
         studentRepository.save(student);
 
         log.debug("{}, Successfully registered student with email [{}]", methodName, student.getEmail());
+    }
+
+    private void reRegister(final UUID studentId, final Student updatedStudent) {
+        updatedStudent.setId(studentId);
+        studentRepository.update(updatedStudent);
+        log.debug("reRegister(), Successfully re-registered student with email [{}]", updatedStudent.getEmail());
     }
 
     @Override

@@ -12,6 +12,9 @@ public final class AddressMapper {
     }
 
     public static Address toAddress(final AddressRequest addressRequest) {
+        if (addressRequest == null)
+            return null;
+
         return Address.builder()
                 .country(addressRequest.country())
                 .governance(addressRequest.governance())

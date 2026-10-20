@@ -3,12 +3,16 @@ package com.pioneers.jpa.services.students;
 import com.pioneers.jpa.errors.exceptions.StudentException;
 import com.pioneers.jpa.models.dtos.requests.StudentUpdate;
 import com.pioneers.jpa.models.dtos.responses.StudentResponse;
+import com.pioneers.jpa.models.entities.Address;
 import com.pioneers.jpa.models.entities.Student;
 import com.pioneers.jpa.repositories.StudentRepository;
+import com.pioneers.jpa.services.address.AddressService;
+import com.pioneers.jpa.utils.mappers.AddressMapper;
 import com.pioneers.jpa.utils.mappers.StudentMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +28,7 @@ import static com.pioneers.jpa.utils.NameBuilder.buildFullName;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
+    private final AddressService addressService;
 
     @Override
     public List<StudentResponse> findAllSortedByAge() throws StudentException {
@@ -96,33 +101,32 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional
     public void update(final UUID id, final StudentUpdate studentUpdateRequest) throws StudentException {
-
-        final Optional<Student> optionalFoundStudent = studentRepository.findById(id);
-
-        if (optionalFoundStudent.isEmpty()) {
-            throw new StudentException("Student doesn't exist in the DB");
-        }
+        final Student foundStudent = studentRepository.findById(id)
+                .orElseThrow(() -> new StudentException("Student doesn't exist in the DB"));
 
         final String updatedFullName = buildFullName(studentUpdateRequest.firstName(), studentUpdateRequest.secondName());
         final String updatedHashedPassword = hashPassword(studentUpdateRequest.password());
+        final Address requestedAddress = AddressMapper.toAddress(studentUpdateRequest.addressRequest());
 
-        final Student foundStudent = optionalFoundStudent.get();
         final Student updatedStudent = Student.builder()
                 .id(foundStudent.getId())
                 .fullName(updatedFullName)
-                .age(foundStudent.getAge())
-                .email(foundStudent.getEmail())
+                .age(studentUpdateRequest.age())
+                .email(studentUpdateRequest.email())
                 .password(updatedHashedPassword)
                 .isLoggedIn(foundStudent.isLoggedIn())
                 .score(studentUpdateRequest.score())
                 .finalScore(studentUpdateRequest.finalScore())
                 .createdAt(foundStudent.getCreatedAt())
                 .isArchived(foundStudent.getIsArchived())
+                .address(addressService.findOrCreateAddress(requestedAddress))
                 .build();
 
         studentRepository.update(updatedStudent);
     }
+
 
     @Override
     public void deleteById(final UUID id) throws StudentException {

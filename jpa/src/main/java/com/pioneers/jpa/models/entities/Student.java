@@ -46,7 +46,7 @@ public class Student {
     @Column(name = "is_archived")
     private Boolean isArchived;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id")
     private Address address;
 
